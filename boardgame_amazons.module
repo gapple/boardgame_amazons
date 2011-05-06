@@ -1,0 +1,110 @@
+<?php
+
+/**
+ * Implementation of hook_boardgame_gametypes
+ */
+function boardgame_amazons_boardgame_gametypes() {
+  return array(
+      'amazons' => array(
+        'initialize' => array('boardgame_amazons_initialize'),
+        'validate_move' => array('boardgame_amazons_validate_move'),
+      ),
+  );
+}
+
+/**
+ * Create a default starting board layout
+ */
+function boardgame_amazons_initialize(){
+  $unit_template = new stdClass();
+  $unit_template->type = 'queen';
+
+  $board = array();
+
+  $unit_template->set = 'white';
+  $board['d1'] = clone $unit_template;
+  $board['g1'] = clone $unit_template;
+  $board['a4'] = clone $unit_template;
+  $board['j4'] = clone $unit_template;
+
+  $unit_template->set = 'black';
+  $board['a7'] = clone $unit_template;
+  $board['j7'] = clone $unit_template;
+  $board['d10'] = clone $unit_template;
+  $board['g10'] = clone $unit_template;
+
+  return $board;
+}
+
+/**
+ * Check that a move is valid for an amazon game
+ */
+function boardgame_amazons_validate_move($state, $move) {
+  $convert = array(
+      'a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5,
+      'f' => 6, 'g' => 7, 'h' => 8, 'i' => 9, 'b' => 10,
+    );
+
+  // must remove-add queen, add arrow
+  if (count($move) != 3) {
+    return FALSE;
+  }
+
+  $queen_start = NULL;
+  $queen_end = NULL;
+  $arrow_end = NULL;
+
+  foreach ($move as $action) {
+    // check that unit type is valid
+    if (!in_array($action->type, array('queen', 'arrow'))) {
+      return FALSE;
+    }
+    if (!in_array($action->set, array('black', 'white'))) {
+      return FALSE;
+    }
+
+    // check that board positions are valid
+    preg_match('/^([a-z]+)([\d]+)/i', $action->position, $matches);
+    $file = $matches[1];
+    $rank = $matches[2];
+    if (isset($convert[$file]) && in_array($rank, $convert)) {
+      return FALSE;
+    }
+
+    if ($action->type == 'queen' && $action->action == 'remove') {
+      $queen_start = array('file' => $file, 'rank' => $rank);
+    }
+    else if ($action->type == 'queen' && $action->action == 'add') {
+      $queen_end = array('file' => $file, 'rank' => $rank);
+    }
+    else if ($action->type == 'arrow' && $action->action == 'add') {
+      $arrow_end = array('file' => $file, 'rank' => $rank);
+    }
+  }
+
+  // check legality of move
+  if (!isset($queen_start) || !isset($queen_end) || !isset($arrow_end)) {
+    return FALSE;
+  }
+  // queen must move
+  if($queen_start['rank'] == $queen_end['rank']
+      && $queen_start['file'] == $queen_end['file']) {
+    return FALSE;
+  }
+  // queen's move must be horizontal, vertical, or diagonal
+  $qh = $convert[$queen_end['file']] - $convert[$queen_start['file']];
+  $qv = $queen_end['rank'] - $queen_start['rank'];
+  if($qh != 0 && $qv != 0 && abs($qh) != abs($qv) ){
+    return FALSE;
+  }
+  // arrow's shot must be horizontal, vertical, or diagonal
+  $ah = $convert[$arrow_end['file']] - $convert[$queen_end['file']];
+  $av = $arrow_end['rank'] - $queen_end['rank'];
+  if($ah != 0 && $av != 0 && abs($ah) != abs($av) ){
+    return FALSE;
+  }
+
+  // TODO check that obstructions are not violated
+
+  return TRUE;
+}
