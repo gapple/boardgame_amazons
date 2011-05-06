@@ -1,0 +1,5 @@
+
+name = Game of the Amazons
+description = Extension for Board Game to handle Game of the Amazons
+core = 6.x
+dependencies[] = boardgame
