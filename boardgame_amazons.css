@@ -1,0 +1,16 @@
+
+table.boardgame-amazons {
+  width: auto;
+}
+table.boardgame-amazons th {
+    text-align: center;
+}
+table.boardgame-amazons td {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ccc;
+  padding: 8px;
+  font-size: 40px;
+  text-align: center;
+    
+}

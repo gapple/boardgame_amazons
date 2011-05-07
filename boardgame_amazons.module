@@ -1,13 +1,22 @@
 <?php
-
+/**
+ * Return array for helping to convert files to numeric values
+ */
+function _boardgame_amazons_convert(){
+  return array(
+      'a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5,
+      'f' => 6, 'g' => 7, 'h' => 8, 'i' => 9, 'j' => 10,
+    );
+}
 /**
  * Implementation of hook_boardgame_gametypes
  */
 function boardgame_amazons_boardgame_gametypes() {
   return array(
       'amazons' => array(
-        'initialize' => array('boardgame_amazons_initialize'),
-        'validate_move' => array('boardgame_amazons_validate_move'),
+        'initialize' => 'boardgame_amazons_initialize',
+        'validate_move' => 'boardgame_amazons_validate_move',
+        'render' => 'boardgame_amazons_render',
       ),
   );
 }
@@ -40,10 +49,7 @@ function boardgame_amazons_initialize(){
  * Check that a move is valid for an amazon game
  */
 function boardgame_amazons_validate_move($state, $move) {
-  $convert = array(
-      'a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5,
-      'f' => 6, 'g' => 7, 'h' => 8, 'i' => 9, 'b' => 10,
-    );
+  $convert = _boardgame_amazons_convert();
 
   // must remove-add queen, add arrow
   if (count($move) != 3) {
@@ -107,4 +113,52 @@ function boardgame_amazons_validate_move($state, $move) {
   // TODO check that obstructions are not violated
 
   return TRUE;
+}
+
+/**
+ * Render HTML output of game state
+ */
+function boardgame_amazons_render($game){
+  drupal_add_css(drupal_get_path('module', 'boardgame_amazons') .'/boardgame_amazons.css');
+
+  $convert = _boardgame_amazons_convert();
+  $convert_flip = array_flip($convert);
+
+  // Load the board data into a table
+  $board = array();
+  for ($rank = 10; $rank > 0; --$rank) { // highest rank is at top of board.
+    $board[$rank] = array();
+    for ($file_num = 1; $file_num <= 10; ++$file_num) {
+      $board[$rank][$convert_flip[$file_num]] = '';
+    }
+  }
+
+  foreach ($game->state as $key => $tile) {
+    if (!empty($tile)) {
+      preg_match('/^([a-z]+)([\d]+)/i', $key, $matches);
+      $file = $matches[1];
+      $rank = $matches[2];
+
+      if ($tile->type == 'queen') {
+        if ($tile->set == 'white') {
+          $board[$rank][$file] = '&#9813;';
+        }
+        else if ($tile->set == 'black') {
+          $board[$rank][$file] = '&#9819;';
+        }
+      }
+      else if($tile->type == 'arrow') {
+        $board[$rank][$file] = 'X';
+      }
+    }
+  }
+
+  $content = theme_table(array_keys($board[1]), $board, array('class' => 'boardgame boardgame-' . check_plain($game->type)));
+
+  // TODO show information for last move
+  if ($game->ply > 0) {
+
+  }
+
+  return $content;
 }
