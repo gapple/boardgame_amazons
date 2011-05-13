@@ -2,14 +2,14 @@
 /**
  * Return array for helping to convert files to numeric values
  */
-function _boardgame_amazons_convert(){
+function _boardgame_amazons_convert() {
   return array(
       'a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5,
       'f' => 6, 'g' => 7, 'h' => 8, 'i' => 9, 'j' => 10,
     );
 }
 /**
- * Implementation of hook_boardgame_gametypes
+ * Implementation of hook_boardgame_gametypes().
  */
 function boardgame_amazons_boardgame_gametypes() {
   return array(
@@ -24,7 +24,7 @@ function boardgame_amazons_boardgame_gametypes() {
 /**
  * Create a default starting board layout
  */
-function boardgame_amazons_initialize(){
+function boardgame_amazons_initialize() {
   $unit_template = new stdClass();
   $unit_template->type = 'queen';
 
@@ -80,10 +80,10 @@ function boardgame_amazons_validate_move($state, $move) {
     if ($action->type == 'queen' && $action->action == 'remove') {
       $queen_start = array('file' => $file, 'rank' => $rank);
     }
-    else if ($action->type == 'queen' && $action->action == 'add') {
+    elseif ($action->type == 'queen' && $action->action == 'add') {
       $queen_end = array('file' => $file, 'rank' => $rank);
     }
-    else if ($action->type == 'arrow' && $action->action == 'add') {
+    elseif ($action->type == 'arrow' && $action->action == 'add') {
       $arrow_end = array('file' => $file, 'rank' => $rank);
     }
   }
@@ -93,20 +93,20 @@ function boardgame_amazons_validate_move($state, $move) {
     return FALSE;
   }
   // queen must move
-  if($queen_start['rank'] == $queen_end['rank']
+  if ($queen_start['rank'] == $queen_end['rank']
       && $queen_start['file'] == $queen_end['file']) {
     return FALSE;
   }
   // queen's move must be horizontal, vertical, or diagonal
   $qh = $convert[$queen_end['file']] - $convert[$queen_start['file']];
   $qv = $queen_end['rank'] - $queen_start['rank'];
-  if($qh != 0 && $qv != 0 && abs($qh) != abs($qv) ){
+  if ($qh != 0 && $qv != 0 && abs($qh) != abs($qv) ) {
     return FALSE;
   }
   // arrow's shot must be horizontal, vertical, or diagonal
   $ah = $convert[$arrow_end['file']] - $convert[$queen_end['file']];
   $av = $arrow_end['rank'] - $queen_end['rank'];
-  if($ah != 0 && $av != 0 && abs($ah) != abs($av) ){
+  if ($ah != 0 && $av != 0 && abs($ah) != abs($av) ) {
     return FALSE;
   }
 
@@ -118,7 +118,7 @@ function boardgame_amazons_validate_move($state, $move) {
 /**
  * Render HTML output of game state
  */
-function boardgame_amazons_render($game){
+function boardgame_amazons_render($game) {
   drupal_add_css(drupal_get_path('module', 'boardgame_amazons') .'/boardgame_amazons.css');
 
   $convert = _boardgame_amazons_convert();
@@ -143,15 +143,16 @@ function boardgame_amazons_render($game){
         if ($tile->set == 'white') {
           $board[$rank][$file] = '&#9813;';
         }
-        else if ($tile->set == 'black') {
+        elseif ($tile->set == 'black') {
           $board[$rank][$file] = '&#9819;';
         }
       }
-      else if($tile->type == 'arrow') {
+      elseif ($tile->type == 'arrow') {
         $board[$rank][$file] = 'X';
       }
     }
   }
+  // TODO add rank numbering into first column of table
 
   $content = theme_table(array_keys($board[1]), $board, array('class' => 'boardgame boardgame-' . check_plain($game->type)));
 
